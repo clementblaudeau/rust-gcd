@@ -42,7 +42,7 @@ macro_rules! gcd_impl {
             v >>= shift;
             u >>= u.trailing_zeros();
 
-            loop {
+            while true {
                 v >>= v.trailing_zeros();
 
                 #[allow(clippy::manual_swap)]
@@ -104,60 +104,12 @@ macro_rules! gcd_impl {
 }
 
 gcd_impl! {
-    (u8) binary_u8 euclid_u8,
-    (u16) binary_u16 euclid_u16,
-    (u32) binary_u32 euclid_u32,
-    (u64) binary_u64 euclid_u64,
-    (u128) binary_u128 euclid_u128,
-    (usize) binary_usize euclid_usize
-}
-
-macro_rules! gcd_impl_nonzero {
-    ($(($T:ty) $binary_nonzero:ident/$binary:ident $euclid_nonzero:ident/$euclid:ident),*) => {$(
-        #[doc = concat!("Const binary GCD implementation for `", stringify!($T), "`.")]
-        pub const fn $binary_nonzero(u: $T, v: $T) -> $T
-        {
-            match <$T>::new($binary(u.get(), v.get())) {
-                Some(x) => x,
-                None => unreachable!(),
-            }
-        }
-
-        #[doc = concat!("Const euclid GCD implementation for `", stringify!($T), "`.")]
-        pub const fn $euclid_nonzero(a: $T, b: $T) -> $T
-        {
-            match <$T>::new($euclid(a.get(), b.get())) {
-                Some(x) => x,
-                None => unreachable!(),
-            }
-        }
-
-        impl Gcd for $T {
-            #[inline]
-            fn gcd(self, other: $T) -> $T {
-                self.gcd_binary(other)
-            }
-
-            #[inline]
-            fn gcd_binary(self, v: $T) -> $T {
-                $binary_nonzero(self, v)
-            }
-
-            #[inline]
-            fn gcd_euclid(self, other: $T) -> $T {
-                $euclid_nonzero(self, other)
-            }
-        }
-    )*}
-}
-
-gcd_impl_nonzero! {
-    (NonZeroU8) binary_nonzero_u8/binary_u8 euclid_nonzero_u8/euclid_u8,
-    (NonZeroU16) binary_nonzero_u16/binary_u16 euclid_nonzero_u16/euclid_u16,
-    (NonZeroU32) binary_nonzero_u32/binary_u32 euclid_nonzero_u32/euclid_u32,
-    (NonZeroU64) binary_nonzero_u64/binary_u64 euclid_nonzero_u64/euclid_u64,
-    (NonZeroU128) binary_nonzero_u128/binary_u128 euclid_nonzero_u128/euclid_u128,
-    (NonZeroUsize) binary_nonzero_usize/binary_usize euclid_nonzero_usize/euclid_usize
+    (u8) binary_u8 euclid_u8
+    // (u16) binary_u16 euclid_u16,
+    // (u32) binary_u32 euclid_u32,
+    // (u64) binary_u64 euclid_u64,
+    // (u128) binary_u128 euclid_u128,
+    // (usize) binary_usize euclid_usize
 }
 
 #[cfg(test)]
