@@ -47,34 +47,62 @@ theorem Spec.ForInStep.casesOn_spec {α β: Type} (x y : α → Result β) (s : 
     Q := by
 cases s <;> simp [hP]
 
+theorem SPred.entails_and (P Q : α → SPred ps.args) (m : Type u → Type v) [WP m ps] (x : m α)
+  (hP : I ⊢ₛ wp⟦x⟧ (fun a => P a, R))
+  (hQ : I ⊢ₛ wp⟦x⟧ (fun a => Q a, R))
+  :
+  I ⊢ₛ wp⟦x⟧ (fun a => spred(P a ∧ Q a), R) := sorry
+
+#reduce    Assertion (PostShape.except Error PostShape.pure)
+
+def inv2 : ExceptConds (.except Error .pure) :=  (fun (e : Error) => ULift.up True, ())
+
+
+theorem pull_precondition (m : Type u → Type v) [WP m ps] (x : m α):
+(P → ⦃⌜ True ⌝⦄ x ⦃ Q ⦄) → ⦃⌜ P ⌝⦄ x ⦃ Q ⦄
+ := sorry
+
+ #check SPred.and
+
 @[spec]
 theorem Spec.forIn_loop {β : Type}
     (init: β) (f : Unit → β → Result (ForInStep β))
     (termination : β → Nat)
-    (decreases : ∀ a b, f () b = .ok (.yield a) → termination b < termination a)
-    {inv : PostCond β (.except Error .pure)}
-    (step: ∀ b,
+    (decreases : ∀ a b, f () b = .ok (.yield a) → termination a < termination b)
+    (hdiv : ∀ b, f () b ≠ .div)
+    (inv : β → Prop)
+    (inv_init : inv init)
+    (step: ∀ b (hb : inv b),
       Triple
         (f () b)
-        (inv.1 b)
-        (fun r => match r with
-          | .yield b' => inv.1 b'
-          | .done b' => inv.1 b', inv.2)) :
-    Triple (Loop.forIn.loop f init) (inv.1 init) inv := by
+        (⌜ True ⌝)
+        (fun r => ULift.up (inv r.value), inv2)) :
+    Triple (Loop.forIn.loop f init) (⌜ True ⌝) (fun b => ⌜ inv b ⌝, inv2) := by
+have hf : Triple (f () init) (⌜ True ⌝) (fun a => spred((ULift.up (f () init = .ok a)) ∧ (⌜ inv a.value ⌝)), inv2) := by
+  apply SPred.entails_and
+  · have := hdiv init
+    revert this
+    cases (f () init) <;> simp [inv2]
+  · apply step
+    apply inv_init
 unfold Loop.forIn.loop
-apply Triple.bind
-· apply step
-· intro b
-  unfold Loop.forIn.loop.match_1
-  cases b
-  case done a =>
-    simp
-    sorry
-
-  case yield a =>
-    apply Spec.forIn_loop a f termination decreases step
+apply SPred.entails.trans hf
+simp only [WP.bind]
+apply (wp (f () init)).mono _ _
+simp only [PostCond.entails, Assertion, ExceptConds.entails.refl, and_true]
+intro b
+unfold Loop.forIn.loop.match_1
+cases b
+case done a =>
+  simp
+case yield a =>
+  refine pull_precondition Result (ForInStep.casesOn (ForInStep.yield a) (fun a => (fun b => pure b) a) fun a => (fun b => Loop.forIn.loop f b) a) ?_
+  intro h
+  exact Spec.forIn_loop a f termination decreases hdiv inv h.2 step
 -- apply Spec.ForInStep.casesOn_spec
 -- intro a
 -- cases b
 termination_by termination init
-decreasing_by sorry
+decreasing_by
+  apply decreases
+  apply h.1
