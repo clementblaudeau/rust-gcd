@@ -9,8 +9,9 @@ open Std.Do
 open Std.Tactic
 open Lean
 
--- This is needed to use `partial_fixpoint`.
--- check https://github.com/leanprover/lean4/blob/cdd38ac5115bdeec5f609e9126cce00f51ae88b3/src/Init/Internal/Order/Basic.lean#L33-L50
+section
+/- The following instances are required to use `partial_fixpoint` in the `Result` monad. -/
+
 open Order
 instance : PartialOrder (Result α) := inferInstanceAs (PartialOrder (FlatOrder Result.div))
 noncomputable instance : CCPO (Result α) := inferInstanceAs (CCPO (FlatOrder Result.div))
@@ -20,10 +21,12 @@ noncomputable instance : MonoBind Result where
     · exact FlatOrder.rel.bot
     · exact FlatOrder.rel.refl
   bind_mono_right h := by
-    -- cases ‹Result _›
-    -- · exact FlatOrder.rel.refl
-    -- · exact h _
-    sorry
+    cases ‹Result _›
+    · exact h _
+    · exact FlatOrder.rel.refl
+    · exact FlatOrder.rel.refl
+
+end section
 
 /-- Our own copy of `Loop.forIn` because the original one is `partial` and thus we cannot reason
 about it. -/
