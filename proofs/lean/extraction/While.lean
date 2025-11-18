@@ -70,8 +70,9 @@ theorem pull_precondition (m : Type u → Type v) [WP m ps] (x : m α):
  apply H
  assumption
 
+
 @[spec]
-theorem Spec.forIn_loop {β : Type}
+theorem Spec.forIn_loop' {β : Type}
     (init: β) (f : Unit → β → Result (ForInStep β))
     (termination : β → Nat)
     (decreases : ∀ a b, f () b = .ok (.yield a) → termination a < termination b)
@@ -104,7 +105,7 @@ case done a =>
 case yield a =>
   refine pull_precondition Result (ForInStep.casesOn (ForInStep.yield a) (fun a => (fun b => pure b) a) fun a => (fun b => Loop.forIn.loop f b) a) ?_
   intro h
-  exact Spec.forIn_loop a f termination decreases hdiv inv h.2 step
+  exact Spec.forIn_loop' a f termination decreases hdiv inv h.2 step
 -- apply Spec.ForInStep.casesOn_spec
 -- intro a
 -- cases b
@@ -112,3 +113,50 @@ termination_by termination init
 decreasing_by
   apply decreases
   apply h.1
+
+open ExceptConds in
+@[simp]
+theorem ExceptConds.and_elim_left {x y : ExceptConds ps} : x ∧ₑ y ⊢ₑ x := by
+  induction ps
+  case pure => trivial
+  case arg ih => exact ih
+  case except ε ps ih => constructor <;> simp [SPred.and_elim_l, ih]
+
+@[spec]
+theorem Spec.forIn_loop {β : Type}
+    (init: β) (f : Unit → β → Result (ForInStep β))
+    (inv : β → Prop)
+    (termination : β → Nat)
+    (decreases : ∀ {s}, inv s →
+      ⦃ ⌜ True ⌝ ⦄
+      f () s
+      ⦃⇓?r => ⌜ ∀ s', r = .yield s' → termination s' < termination s ⌝ ⦄)
+    (hdiv : ∀ b, f () b ≠ .div)
+    (inv_init : inv init)
+    (step: ∀ {s}, inv s →
+      Triple
+        (f () s)
+        (⌜ True ⌝)
+        (fun r => ULift.up (inv r.value), inv2)) :
+    Triple (Loop.forIn.loop f init) (⌜ True ⌝) (fun b => ⌜ inv b ⌝, inv2) := by
+  have hf := Triple.and (f () init) (decreases inv_init) (step inv_init)
+  simp only [SPred.and_nil, and_self] at hf
+  unfold Loop.forIn.loop Triple
+  apply SPred.entails.trans hf
+  simp only [WP.bind]
+  apply (wp (f () init)).mono _ _
+  simp only [PostCond.entails, Assertion]
+  refine And.intro ?_ ExceptConds.and_elim_left
+  intro r
+  unfold Loop.forIn.loop.match_1
+  cases hr : r
+  case done a =>
+    simp
+  case yield a =>
+    refine pull_precondition Result (ForInStep.casesOn (ForInStep.yield a) (fun a => (fun b => pure b) a) fun a => (fun b => Loop.forIn.loop f b) a) ?_
+    intro h
+    exact Spec.forIn_loop a f inv termination decreases hdiv h.2 step
+  termination_by termination init
+  decreasing_by
+    simp only [ForInStep.yield.injEq, forall_eq', SPred.down_pure] at h
+    exact h.1
