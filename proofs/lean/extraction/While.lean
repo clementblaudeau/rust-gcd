@@ -48,24 +48,27 @@ theorem Spec.ForInStep.casesOn_spec {α β: Type} (x y : α → Result β) (s : 
     (ForInStep.casesOn s x y : Result β)
     P
     Q := by
-cases s <;> simp [hP]
+  cases s <;> simp [hP]
 
 theorem SPred.entails_and (P Q : α → SPred ps.args) (m : Type u → Type v) [WP m ps] (x : m α)
-  (hP : I ⊢ₛ wp⟦x⟧ (fun a => P a, R))
-  (hQ : I ⊢ₛ wp⟦x⟧ (fun a => Q a, R))
-  :
-  I ⊢ₛ wp⟦x⟧ (fun a => spred(P a ∧ Q a), R) := sorry
-
-#reduce    Assertion (PostShape.except Error PostShape.pure)
+    (hP : I ⊢ₛ wp⟦x⟧ (fun a => P a, R))
+    (hQ : I ⊢ₛ wp⟦x⟧ (fun a => Q a, R)) :
+    I ⊢ₛ wp⟦x⟧ (fun a => spred(P a ∧ Q a), R) := by
+  apply SPred.entails.trans (SPred.and_intro hP hQ)
+  refine SPred.entails.trans ?_ (PredTrans.mono (wp x) ?_ (Prod.mk (fun a => (P a).and (Q a)) R) ?_)
+  · exact ((wp x).conjunctive (Prod.mk (fun a => P a) R) (Prod.mk (fun a => Q a) R)).mpr
+  · simp [←R.and_eq_left]
 
 def inv2 : ExceptConds (.except Error .pure) :=  (fun (e : Error) => ULift.up True, ())
 
-
 theorem pull_precondition (m : Type u → Type v) [WP m ps] (x : m α):
 (P → ⦃⌜ True ⌝⦄ x ⦃ Q ⦄) → ⦃⌜ P ⌝⦄ x ⦃ Q ⦄
- := sorry
-
- #check SPred.and
+ := by
+ intro H
+ apply SPred.pure_elim'
+ intro HP
+ apply H
+ assumption
 
 @[spec]
 theorem Spec.forIn_loop {β : Type}
