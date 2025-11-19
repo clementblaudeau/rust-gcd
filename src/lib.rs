@@ -73,6 +73,7 @@ macro_rules! gcd_impl {
 
             #[allow(clippy::manual_swap)]
             while b != 0 {
+                hax_lib::loop_decreases!(b);
                 // mem::swap(&mut a, &mut b);
                 let temp = a;
                 a = b;

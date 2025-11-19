@@ -11,12 +11,12 @@ categories = ["algorithms"]
 edition = "2021"
 
 [dependencies]
+hax-lib = { path = "../hax/hax-lib" }
 
 [dev-dependencies]
 criterion = "0.3"
 rand = "0.7"
 rand_chacha = "0.2"
-hax-lib = { path = "/home/cblaudeau/cryspen/hax/lean-core-models/hax-lib" }
 
 [[bench]]
 name = "gcd_benchmark"
