@@ -16,20 +16,24 @@ theorem Rust_primitives.Hax.while_loop.spec {State: Type}
     inv state
     ⦃ ⇓? r => ⌜ r = inv' state ⌝ ⦄)
   (cond_cond' : ∀ state,
-    inv' state →
     ⦃ ⌜ True ⌝ ⦄
     cond state
-    ⦃ ⇓ r => ⌜ r = cond' state ⌝ ⦄)
+    ⦃ ⇓? r => ⌜ r = cond' state ⌝ ⦄)
   (inv_init :
     ⦃ ⌜ True ⌝ ⦄
     inv init
     ⦃ ⇓ r => ⌜ r = true ⌝ ⦄)
-  (inv_step : ∀ state,
+  (cond_init :
+    ⦃ ⌜ True ⌝ ⦄
+    cond init
+    ⦃ ⇓ _ => ⌜ True ⌝ ⦄)
+  (step : ∀ state,
     inv' state →
     cond' state →
     ⦃ ⌜ True ⌝ ⦄
     do
       let state ← body state
+      let _ ← cond state
       inv state
     ⦃ ⇓ isInvTrue => ⌜ isInvTrue ⌝ ⦄)
   (decreases : ∀ state,
@@ -44,7 +48,7 @@ theorem Rust_primitives.Hax.while_loop.spec {State: Type}
     ⦃ ⇓ (m, m') => ⌜ 0 ≤ m' ∧ m' < m ⌝ ⦄) :
   ⦃ ⌜ True ⌝ ⦄
   Rust_primitives.Hax.while_loop cond inv termination init body
-  ⦃ ⇓ r => ⌜ True ⌝ ⦄ := by sorry
+  ⦃ ⇓ state' => ⌜ inv' state' = true ∧ cond' state' = false ⌝ ⦄ := by sorry
 
 
 @[spec]
