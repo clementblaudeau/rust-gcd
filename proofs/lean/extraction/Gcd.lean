@@ -19,6 +19,8 @@ def Rust_primitives.Hax.while_loop {State: Type}
   (init : State)
   (body : State -> Result State)
   : Result State := sorry
+
+@[spec, simp]
 def Rust_primitives.Hax.Int.from_machine (x : u8) : Hax_lib.Int.Int := Int.ofNat x.toNat
 
 -- Const euclid GCD implementation for `u8`.

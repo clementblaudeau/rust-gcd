@@ -6,7 +6,7 @@
    "name": "Hax",
    "manifestFile": "lake-manifest.json",
    "inherited": false,
-   "dir": "../../../hax/hax-lib/proof-libs/lean",
+   "dir": "../../../hax/main/hax-lib/proof-libs/lean",
    "configFile": "lakefile.toml"}],
  "name": "Gcd",
  "lakeDir": ".lake"}
