@@ -63,8 +63,6 @@ theorem Rust_primitives.Hax.while_loop.spec2 {State: Type}
   (body : State -> Result State)
   (inv_init_true :
     ⊢ₛ wp⟦ inv init ⟧ (⇓ r => ⌜ ↑r ⌝ ))
-  (inv_implies_cond_pf : ∀ state,
-    ⊢ₛ wp⟦ inv state ⟧ ( ⇓ r => ⌜ r → panic_free (cond state) ⌝ ))
   (step : ∀ state,
     ⊢ₛ wp⟦ inv state ⟧ post⟨
       fun r => ⌜ r → ⊢ₛ wp⟦
