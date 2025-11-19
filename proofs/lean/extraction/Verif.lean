@@ -7,23 +7,33 @@ theorem Rust_primitives.Hax.while_loop.spec {State: Type}
   (cond: State → Result Bool)
   (cond' : State → Bool)
   (inv: State → Result Bool)
+  (inv': State → Bool)
   (termination : State -> Result Int)
   (init : State)
-  (body : State -> Result State) :
-  -- inv init = pure true →
-  -- (∀ state,
-  --   inv state = pure true →
-  --   cond state = pure true →
-  --   ⦃ ⌜ True ⌝ ⦄
-  --   do
-  --     let state ← body state
-  --     inv state
-  --   ⦃ ⇓ isInvTrue => ⌜ isInvTrue ⌝ ⦄) →
-  (∀ state,
+  (body : State -> Result State)
+  (inv_inv' : ∀ state,
+    ⦃ ⌜ True ⌝ ⦄
+    inv state
+    ⦃ ⇓? r => ⌜ r = inv' state ⌝ ⦄)
+  (cond_cond' : ∀ state,
+    inv' state →
     ⦃ ⌜ True ⌝ ⦄
     cond state
-    ⦃ ⇓ r => ⌜ r = cond' state ⌝ ⦄) →
-  (∀ state,
+    ⦃ ⇓ r => ⌜ r = cond' state ⌝ ⦄)
+  (inv_init :
+    ⦃ ⌜ True ⌝ ⦄
+    inv init
+    ⦃ ⇓ r => ⌜ r = true ⌝ ⦄)
+  (inv_step : ∀ state,
+    inv' state →
+    cond' state →
+    ⦃ ⌜ True ⌝ ⦄
+    do
+      let state ← body state
+      inv state
+    ⦃ ⇓ isInvTrue => ⌜ isInvTrue ⌝ ⦄)
+  (decreases : ∀ state,
+    inv' state →
     cond' state →
     ⦃ ⌜ True ⌝ ⦄
     do
@@ -31,7 +41,7 @@ theorem Rust_primitives.Hax.while_loop.spec {State: Type}
       let m ← termination state
       let m' ← termination state'
       pure (m, m')
-    ⦃ ⇓ (m, m') => ⌜ 0 ≤ m' ∧ m' < m ⌝ ⦄) →
+    ⦃ ⇓ (m, m') => ⌜ 0 ≤ m' ∧ m' < m ⌝ ⦄) :
   ⦃ ⌜ True ⌝ ⦄
   Rust_primitives.Hax.while_loop cond inv termination init body
   ⦃ ⇓ r => ⌜ True ⌝ ⦄ := by sorry
@@ -52,9 +62,11 @@ theorem Gcd.euclid_u8.spec (a:u8) (b:u8) :
   := by
   mvcgen (stepLimit := none) [euclid_u8]
   · grind
+  · grind
   · constructor
     apply Int.zero_le_ofNat
     exact Int.lt_of_toNat_lt (by assumption)
+  · grind
   · grind
   · constructor
     apply Int.zero_le_ofNat
