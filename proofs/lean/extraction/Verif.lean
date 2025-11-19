@@ -5,6 +5,7 @@ open Std.Tactic
 @[spec]
 theorem Rust_primitives.Hax.while_loop.spec {State: Type}
   (cond: State → Result Bool)
+  (cond' : State → Bool)
   (inv: State → Result Bool)
   (termination : State -> Result Int)
   (init : State)
@@ -20,17 +21,17 @@ theorem Rust_primitives.Hax.while_loop.spec {State: Type}
   --   ⦃ ⇓ isInvTrue => ⌜ isInvTrue ⌝ ⦄) →
   (∀ state,
     ⦃ ⌜ True ⌝ ⦄
+    cond state
+    ⦃ ⇓ r => ⌜ r = cond' state ⌝ ⦄) →
+  (∀ state,
+    cond' state →
+    ⦃ ⌜ True ⌝ ⦄
     do
-      if ← cond state then
-        let state' ← body state
-        let m ← termination state
-        let m' ← termination state'
-        pure (some (m, m'))
-      else
-        pure none
-    ⦃ ⇓ r => ⌜ match r with
-      | none => True
-      | some (m, m') => (0 ≤ m' ∧ m' < m) ⌝ ⦄) →
+      let state' ← body state
+      let m ← termination state
+      let m' ← termination state'
+      pure (m, m')
+    ⦃ ⇓ (m, m') => ⌜ 0 ≤ m' ∧ m' < m ⌝ ⦄) →
   ⦃ ⌜ True ⌝ ⦄
   Rust_primitives.Hax.while_loop cond inv termination init body
   ⦃ ⇓ r => ⌜ True ⌝ ⦄ := by sorry
