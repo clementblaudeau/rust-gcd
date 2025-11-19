@@ -8,4 +8,4 @@ roots = ["extraction.Gcd"]
 
 [[require]]
 name = "Hax"
-path = "../../../hax/hax-lib/proof-libs/lean"
+path = "../../../hax/dev/hax-lib/proof-libs/lean"
